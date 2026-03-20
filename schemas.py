@@ -8,6 +8,9 @@ class EmployeeBase(BaseModel):
     surname: str
     roleTitle: str
     login: str
+    phone: Optional[str] = None
+    passportSeries: Optional[str] = None
+    faceIdImage: Optional[str] = None
     isApproved: bool = True
     isActive: bool = True
     requireGPS: bool = True
@@ -15,6 +18,19 @@ class EmployeeBase(BaseModel):
 
 class EmployeeCreate(EmployeeBase):
     password: str
+
+class EmployeeUpdate(BaseModel):
+    name: Optional[str] = None
+    surname: Optional[str] = None
+    roleTitle: Optional[str] = None
+    login: Optional[str] = None
+    passportSeries: Optional[str] = None
+    faceIdImage: Optional[str] = None
+    isActive: Optional[bool] = None
+    isApproved: Optional[bool] = None
+    requireGPS: Optional[bool] = None
+    requireFaceID: Optional[bool] = None
+    password: Optional[str] = None
 
 class EmployeeResponse(EmployeeBase):
     id: str
@@ -61,21 +77,42 @@ class ProductResponse(ProductBase):
     class Config:
         from_attributes = True
 
+# ================= SUPPLY REQUEST ITEM =================
+class SupplyRequestItemBase(BaseModel):
+    productName: str
+    quantity: int
+
+class SupplyRequestItemCreate(SupplyRequestItemBase):
+    pass
+
+class SupplyRequestItemResponse(SupplyRequestItemBase):
+    id: str
+    requestId: str
+
+    class Config:
+        from_attributes = True
+
 # ================= SUPPLY REQUEST =================
 class SupplyRequestBase(BaseModel):
-    productId: Optional[str] = None
-    productName: str
     requesterId: str
-    requestedQuantity: int
-    imageUrl: Optional[str] = None
+    status: str = "Kutilmoqda"
+    receiptImage: Optional[str] = None
+    productImage: Optional[str] = None
 
 class SupplyRequestCreate(SupplyRequestBase):
-    pass
+    items: List[SupplyRequestItemCreate]
 
 class SupplyRequestResponse(SupplyRequestBase):
     id: str
     requestDate: datetime
-    isCompleted: bool
+    acceptedTime: Optional[datetime] = None
+    readyTime: Optional[datetime] = None
+    
+    # Qulaylik uchun yuboruvchi haqida ma'lumot qoshamiz (Join orqali keladi)
+    requesterName: Optional[str] = None
+    requesterPhone: Optional[str] = None
+    
+    items: List[SupplyRequestItemResponse] = []
 
     class Config:
         from_attributes = True
@@ -107,9 +144,18 @@ class OrderBase(BaseModel):
     status: str = "pending"
     creatorId: str
     assignedDeliveryId: Optional[str] = None
+    productImage: Optional[str] = None
+    receiptImage: Optional[str] = None
+    isPaid: bool = False
 
 class OrderCreate(OrderBase):
     items: List[OrderItemCreate]
+
+class OrderUpdate(BaseModel):
+    status: Optional[str] = None
+    assignedDeliveryId: Optional[str] = None
+    productImage: Optional[str] = None
+    receiptImage: Optional[str] = None
 
 class OrderResponse(OrderBase):
     id: str
@@ -120,7 +166,126 @@ class OrderResponse(OrderBase):
     class Config:
         from_attributes = True
 
+# ================= ACTION LOG =================
+class ActionLogBase(BaseModel):
+    employeeId: str
+    actionType: str
+    description: str
+
+class ActionLogCreate(ActionLogBase):
+    pass
+
+class ActionLogResponse(ActionLogBase):
+    id: str
+    timestamp: datetime
+
+    class Config:
+        from_attributes = True
+
 # Token
 class Token(BaseModel):
     access_token: str
     token_type: str
+
+# ================= EXPENSE =================
+class ExpenseBase(BaseModel):
+    amount: float
+    receiverId: Optional[str] = None
+    purpose: str
+
+class ExpenseCreate(ExpenseBase):
+    pass
+
+class ExpenseResponse(ExpenseBase):
+    id: str
+    date: datetime
+    cashierId: str
+
+    class Config:
+        from_attributes = True
+
+# ================= CASH SHIFT =================
+class CashShiftBase(BaseModel):
+    cashAmount: float
+    terminalAmount: float
+    zReportImage: str
+
+class CashShiftCreate(CashShiftBase):
+    pass
+
+class CashShiftResponse(CashShiftBase):
+    id: str
+    date: datetime
+    cashierId: str
+
+    class Config:
+        from_attributes = True
+
+class CashShiftOut(CashShiftBase):
+    id: int
+    date: datetime
+    cashier_id: int
+
+    class Config:
+        from_attributes = True
+
+class ShiftScheduleBase(BaseModel):
+    employee_id: int
+    date: str
+    shift_type: str
+
+class ShiftScheduleCreate(ShiftScheduleBase):
+    pass
+
+class ShiftScheduleOut(ShiftScheduleBase):
+    id: int
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class AppNotificationBase(BaseModel):
+    employee_id: int
+    message: str
+
+class AppNotificationCreate(AppNotificationBase):
+    pass
+
+class AppNotificationOut(AppNotificationBase):
+    id: int
+    is_read: bool
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class LocationUpdate(BaseModel):
+    lat: float
+    lng: float
+
+class LiveLocationOut(BaseModel):
+    employee_id: int
+    name: str
+    surname: str
+    role_title: str
+    lat: float
+    lng: float
+    last_updated: datetime
+
+    class Config:
+        from_attributes = True
+
+class MeetingCreate(BaseModel):
+    title: str
+    scheduled_time: datetime
+    participant_ids: List[int]
+
+class MeetingOut(BaseModel):
+    id: int
+    title: str
+    room_name: str
+    scheduled_time: datetime
+    created_by: int
+    
+    class Config:
+        from_attributes = True

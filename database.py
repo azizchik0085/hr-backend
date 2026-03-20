@@ -2,8 +2,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-# Supabase (PostgreSQL) tarmog'iga ulanish siri:
-SQLALCHEMY_DATABASE_URL = "postgresql://postgres:Azizbek0085%40@db.agmsxhesjtvkdjhysqni.supabase.co:5432/postgres"
+# Supabase (PostgreSQL) tarmog'iga ulanish siri (Pooler - IPv4):
+SQLALCHEMY_DATABASE_URL = "postgresql://postgres.agmsxhesjtvkdjhysqni:Azizbek0085%40@aws-1-ap-south-1.pooler.supabase.com:6543/postgres"
 
 # PostgreSQL ga ulanuvchi Engine
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
