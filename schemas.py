@@ -222,15 +222,15 @@ class CashShiftResponse(CashShiftBase):
         from_attributes = True
 
 class CashShiftOut(CashShiftBase):
-    id: int
+    id: str
     date: datetime
-    cashier_id: int
+    cashier_id: str
 
     class Config:
         from_attributes = True
 
 class ShiftScheduleBase(BaseModel):
-    employee_id: int
+    employee_id: str
     date: str
     shift_type: str
 
@@ -245,7 +245,7 @@ class ShiftScheduleOut(ShiftScheduleBase):
         from_attributes = True
 
 class AppNotificationBase(BaseModel):
-    employee_id: int
+    employee_id: str
     message: str
 
 class AppNotificationCreate(AppNotificationBase):
@@ -264,7 +264,7 @@ class LocationUpdate(BaseModel):
     lng: float
 
 class LiveLocationOut(BaseModel):
-    employee_id: int
+    employee_id: str
     name: str
     surname: str
     role_title: str
@@ -278,14 +278,14 @@ class LiveLocationOut(BaseModel):
 class MeetingCreate(BaseModel):
     title: str
     scheduled_time: datetime
-    participant_ids: List[int]
+    participant_ids: List[str]
 
 class MeetingOut(BaseModel):
     id: int
     title: str
     room_name: str
     scheduled_time: datetime
-    created_by: int
+    created_by: str
     
     class Config:
         from_attributes = True

@@ -143,12 +143,12 @@ class Expense(Base):
     receiverId = Column(String, nullable=True) # Kimga berildi (Employee ID)
     purpose = Column(String)
     date = Column(DateTime, default=datetime.utcnow)
-    cashier_id = Column(Integer, ForeignKey('employees.id'))
+    cashier_id = Column(String, ForeignKey('employees.id'))
 
 class ShiftSchedule(Base):
     __tablename__ = "shift_schedules"
     id = Column(Integer, primary_key=True, index=True)
-    employee_id = Column(Integer, ForeignKey('employees.id'))
+    employee_id = Column(String, ForeignKey('employees.id'))
     date = Column(String)  # ISO format "YYYY-MM-DD" Date of shift
     shift_type = Column(String)  # "1-smena", "2-smena"
     created_at = Column(DateTime, default=datetime.utcnow)
@@ -156,7 +156,7 @@ class ShiftSchedule(Base):
 class AppNotification(Base):
     __tablename__ = "app_notifications"
     id = Column(Integer, primary_key=True, index=True)
-    employee_id = Column(Integer, ForeignKey('employees.id'))
+    employee_id = Column(String, ForeignKey('employees.id'))
     message = Column(String)
     is_read = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
@@ -164,7 +164,7 @@ class AppNotification(Base):
 class LiveLocation(Base):
     __tablename__ = "live_locations"
     id = Column(Integer, primary_key=True, index=True)
-    employee_id = Column(Integer, ForeignKey('employees.id'), unique=True)
+    employee_id = Column(String, ForeignKey('employees.id'), unique=True)
     latitude = Column(Float)
     longitude = Column(Float)
     last_updated = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -175,14 +175,14 @@ class Meeting(Base):
     title = Column(String)
     room_name = Column(String) # Jitsi dagi xona nomi
     scheduled_time = Column(DateTime)
-    created_by = Column(Integer, ForeignKey('employees.id'))
+    created_by = Column(String, ForeignKey('employees.id'))
     created_at = Column(DateTime, default=datetime.utcnow)
 
 class MeetingParticipant(Base):
     __tablename__ = "meeting_participants"
     id = Column(Integer, primary_key=True, index=True)
     meeting_id = Column(Integer, ForeignKey('meetings.id'))
-    employee_id = Column(Integer, ForeignKey('employees.id'))
+    employee_id = Column(String, ForeignKey('employees.id'))
 
 class CashShift(Base):
     __tablename__ = "cash_shifts"
