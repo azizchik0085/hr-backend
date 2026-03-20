@@ -14,8 +14,10 @@ def get_employee(db: Session, employee_id: str):
 def get_employee_by_login(db: Session, login: str):
     return db.query(models.Employee).filter(models.Employee.login == login).first()
 
+from sqlalchemy.orm import defer
+
 def get_employees(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.Employee).offset(skip).limit(limit).all()
+    return db.query(models.Employee).options(defer(models.Employee.faceIdImage)).offset(skip).limit(limit).all()
 
 def create_employee(db: Session, employee: schemas.EmployeeCreate):
     hashed_password = get_password_hash(employee.password)
