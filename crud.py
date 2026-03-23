@@ -168,7 +168,12 @@ def create_order(db: Session, order: schemas.OrderCreate):
         creatorId=order.creatorId,
         assignedDeliveryId=order.assignedDeliveryId,
         productImage=order.productImage,
-        receiptImage=order.receiptImage
+        receiptImage=order.receiptImage,
+        is_delivery=order.is_delivery,
+        assigned_seller_id=order.assigned_seller_id,
+        needs_collect_money=order.needs_collect_money,
+        amount_to_collect=order.amount_to_collect,
+        operator_notes=order.operator_notes
     )
     db.add(db_order)
     db.commit()
@@ -265,6 +270,95 @@ def create_cash_shift(db: Session, shift: schemas.CashShiftCreate, cashierId: st
 
 def get_cash_shifts(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.CashShift).order_by(models.CashShift.date.desc()).offset(skip).limit(limit).all()
+
+# ================= CALL LOGS & OPERATOR STATS =================
+def create_call_log(db: Session, call_log: schemas.CallLogCreate):
+    db_call = models.CallLog(
+        id=f"CAL-{uuid.uuid4().hex[:8].upper()}",
+        employee_id=call_log.employee_id,
+        client_phone=call_log.client_phone,
+        call_type=call_log.call_type,
+        duration_seconds=call_log.duration_seconds,
+        record_url=call_log.record_url,
+        timestamp=datetime.utcnow()
+    )
+    db.add(db_call)
+    db.commit()
+    db.refresh(db_call)
+    return db_call
+
+def save_call_audio(db: Session, employee_id: str, client_phone: str, record_url: str):
+    db_call = models.CallLog(
+        id=f"CAL-{uuid.uuid4().hex[:8].upper()}",
+        employee_id=employee_id,
+        client_phone=client_phone,
+        call_type="Yozib Olingan",
+        duration_seconds=0,
+        record_url=record_url,
+        timestamp=datetime.utcnow()
+    )
+    db.add(db_call)
+    db.commit()
+    db.refresh(db_call)
+    return db_call
+
+def get_call_logs(db: Session, limit: int = 1000):
+    return db.query(models.CallLog).order_by(models.CallLog.timestamp.desc()).limit(limit).all()
+
+def get_operator_stats(db: Session, start_date: str = None, end_date: str = None):
+    # Operator yoki Sotuvchi rollaridagi xodimlarni olamiz
+    operators = db.query(models.Employee).filter(
+        (models.Employee.roleTitle.ilike('%operator%')) | 
+        (models.Employee.roleTitle.ilike('%sotuv%'))
+    ).all()
+    
+    stats = []
+    for op in operators:
+        # Calls
+        calls_query = db.query(models.CallLog).filter(models.CallLog.employee_id == op.id)
+        if start_date:
+            try:
+                dt_start = datetime.fromisoformat(start_date)
+                calls_query = calls_query.filter(models.CallLog.timestamp >= dt_start)
+            except: pass
+        if end_date:
+            try:
+                dt_end = datetime.fromisoformat(end_date)
+                calls_query = calls_query.filter(models.CallLog.timestamp <= dt_end)
+            except: pass
+        
+        total_calls = calls_query.count()
+        
+        # Orders created
+        orders_query = db.query(models.Order).filter(models.Order.creatorId == op.id)
+        if start_date:
+            try:
+                dt_start = datetime.fromisoformat(start_date)
+                orders_query = orders_query.filter(models.Order.orderDate >= dt_start)
+            except: pass
+        if end_date:
+            try:
+                dt_end = datetime.fromisoformat(end_date)
+                orders_query = orders_query.filter(models.Order.orderDate <= dt_end)
+            except: pass
+            
+        total_orders = orders_query.count()
+        
+        conversion = 0
+        if total_calls > 0:
+            conversion = (total_orders / total_calls) * 100
+            
+        stats.append({
+            "employeeId": op.id,
+            "name": op.name,
+            "surname": op.surname,
+            "roleTitle": op.roleTitle,
+            "totalCalls": total_calls,
+            "totalOrders": total_orders,
+            "conversionRate": round(conversion, 1)
+        })
+    return stats
+
 
 def pay_order(db: Session, order_id: str):
     db_order = db.query(models.Order).filter(models.Order.id == order_id).first()

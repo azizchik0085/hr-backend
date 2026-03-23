@@ -1,4 +1,6 @@
-from fastapi import FastAPI, Depends, HTTPException, status, File, UploadFile
+from fastapi import FastAPI, Depends, HTTPException, status, File, UploadFile, Form
+from fastapi.staticfiles import StaticFiles, Form
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.responses import FileResponse, Response
@@ -28,6 +30,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+os.makedirs("uploads/calls", exist_ok=True)
+app.mount("/static", StaticFiles(directory="uploads"), name="static")
+
+app.mount("/static", StaticFiles(directory="uploads"), name="static")
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
@@ -260,6 +267,38 @@ def delete_order(order_id: str, db: Session = Depends(get_db), current_user: mod
 @app.get("/actions/", response_model=List[schemas.ActionLogResponse])
 def read_actions(employee_id: Optional[str] = None, skip: int = 0, limit: int = 100, db: Session = Depends(get_db), current_user: models.Employee = Depends(get_current_user)):
     return crud.get_action_logs(db, employee_id=employee_id, skip=skip, limit=limit)
+
+# ================= CALL LOGS =================
+@app.post("/calls/", response_model=schemas.CallLogResponse)
+def create_call_log(call_log: schemas.CallLogCreate, db: Session = Depends(get_db)):
+    return crud.create_call_log(db=db, call_log=call_log)
+
+@app.post("/calls/upload-audio")
+async def upload_call_audio(
+    client_phone: str = Form(...),
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: models.Employee = Depends(auth.get_current_user)
+):
+    import uuid
+    import shutil
+    import os
+    filename = f"call_{uuid.uuid4().hex}_{file.filename}"
+    file_path = os.path.join("uploads/calls", filename)
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+        
+    record_url = f"https://hr-backend-a75s.onrender.com/static/calls/{filename}"
+    log = crud.save_call_audio(db, current_user.id, client_phone, record_url)
+    return {"message": "Success", "log_id": log.id, "record_url": record_url}
+
+@app.get("/calls/", response_model=List[schemas.CallLogResponse])
+def get_call_logs(limit: int = 1000, db: Session = Depends(get_db)):
+    return crud.get_call_logs(db, limit=limit)
+
+@app.get("/operator-stats/", response_model=List[schemas.OperatorStatResponse])
+def get_op_stats(start_date: Optional[str] = None, end_date: Optional[str] = None, db: Session = Depends(get_db)):
+    return crud.get_operator_stats(db, start_date=start_date, end_date=end_date)
 
 # ================= FINANCE (MOLIYA) =================
 @app.get("/expenses/", response_model=List[schemas.ExpenseResponse])

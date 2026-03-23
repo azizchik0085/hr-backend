@@ -32,7 +32,7 @@ def verify_face(known_image_path: str, incoming_image_bytes: bytes) -> bool:
             img1_path=known_path_to_use, 
             img2_path=temp_path, 
             model_name="VGG-Face",
-            enforce_detection=True,
+            enforce_detection=False,
             align=True
         )
         return result.get("verified", False)

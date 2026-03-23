@@ -122,7 +122,7 @@ class OrderItemBase(BaseModel):
     productId: str
     productName: str
     quantity: int
-    price: float
+    price: float    
 
 class OrderItemCreate(OrderItemBase):
     pass
@@ -147,6 +147,12 @@ class OrderBase(BaseModel):
     productImage: Optional[str] = None
     receiptImage: Optional[str] = None
     isPaid: bool = False
+
+    is_delivery: bool = False
+    assigned_seller_id: Optional[str] = None
+    needs_collect_money: bool = False
+    amount_to_collect: Optional[float] = None
+    operator_notes: Optional[str] = None
 
 class OrderCreate(OrderBase):
     items: List[OrderItemCreate]
@@ -181,6 +187,34 @@ class ActionLogResponse(ActionLogBase):
 
     class Config:
         from_attributes = True
+
+# ================= CALL LOG =================
+class CallLogBase(BaseModel):
+    employee_id: str
+    client_phone: str
+    call_type: str
+    duration_seconds: int = 0
+    record_url: Optional[str] = None
+
+class CallLogCreate(CallLogBase):
+    pass
+
+class CallLogResponse(CallLogBase):
+    id: str
+    timestamp: datetime
+
+    class Config:
+        from_attributes = True
+
+# ================= OPERATOR STAT =================
+class OperatorStatResponse(BaseModel):
+    employeeId: str
+    name: str
+    surname: str
+    roleTitle: str
+    totalCalls: int
+    totalOrders: int
+    conversionRate: float
 
 # Token
 class Token(BaseModel):

@@ -110,6 +110,13 @@ class Order(Base):
     receiptImage = Column(String, nullable=True)
     isPaid = Column(Boolean, default=False)
 
+    # CRM FIELDS
+    is_delivery = Column(Boolean, default=False)
+    assigned_seller_id = Column(String, ForeignKey("employees.id"), nullable=True)
+    needs_collect_money = Column(Boolean, default=False)
+    amount_to_collect = Column(Float, nullable=True)
+    operator_notes = Column(String, nullable=True)
+
     items = relationship("OrderItem", back_populates="order")
 
 class OrderItem(Base):
@@ -193,3 +200,13 @@ class CashShift(Base):
     zReportImage = Column(String) # Base64
     date = Column(DateTime, default=datetime.utcnow)
     cashierId = Column(String)
+
+class CallLog(Base):
+    __tablename__ = "call_logs"
+    id = Column(Integer, primary_key=True, index=True)
+    employee_id = Column(String, ForeignKey('employees.id'))
+    client_phone = Column(String, index=True)
+    call_type = Column(String) # "incoming", "outgoing"
+    duration_seconds = Column(Integer, default=0)
+    record_url = Column(String, nullable=True) # Zapis linki yoki fayl yo'li
+    timestamp = Column(DateTime, default=datetime.utcnow)
