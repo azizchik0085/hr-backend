@@ -277,7 +277,7 @@ async def upload_call_audio(
     client_phone: str = Form(...),
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
-    current_user: models.Employee = Depends(auth.get_current_user)
+    current_user: models.Employee = Depends(get_current_user)
 ):
     import uuid
     import shutil
