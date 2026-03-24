@@ -481,3 +481,63 @@ def get_my_meetings(db: Session, employee_id: int):
     return db.query(models.Meeting).filter(
         (models.Meeting.id.in_(participant_meeting_ids)) | (models.Meeting.created_by == employee_id)
     ).order_by(models.Meeting.scheduled_time.desc()).all()
+
+# ================= CLIENT & CRM =================
+
+def get_clients(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(models.Client).offset(skip).limit(limit).all()
+
+def create_client(db: Session, client: schemas.ClientCreate):
+    db_client = models.Client(
+        id=f"CLI-{uuid.uuid4().hex[:8].upper()}",
+        **client.model_dump()
+    )
+    db.add(db_client)
+    db.commit()
+    db.refresh(db_client)
+    return db_client
+
+def update_client_stage(db: Session, client_id: str, new_stage: str):
+    db_client = db.query(models.Client).filter(models.Client.id == client_id).first()
+    if db_client:
+        db_client.stage = new_stage
+        db.commit()
+        db.refresh(db_client)
+    return db_client
+
+def get_crm_tasks(db: Session, employee_id: Optional[str] = None, date_str: Optional[str] = None):
+    query = db.query(models.CRMTask)
+    if employee_id:
+        query = query.filter(models.CRMTask.employee_id == employee_id)
+    
+    tasks = query.order_by(models.CRMTask.scheduled_time.asc()).all()
+    
+    # Kunga ko'ra filterlash (agar kelsa)
+    if date_str:
+        return [t for t in tasks if t.scheduled_time.strftime("%Y-%m-%d") == date_str]
+    return tasks
+
+def create_crm_task(db: Session, task: schemas.CRMTaskCreate, employee_id: str):
+    db_task = models.CRMTask(
+        id=f"TSK-{uuid.uuid4().hex[:8].upper()}",
+        employee_id=employee_id,
+        client_id=task.client_id,
+        scheduled_time=task.scheduled_time,
+        expected_product=task.expected_product,
+        notes=task.notes,
+        status=task.status
+    )
+    db.add(db_task)
+    db.commit()
+    db.refresh(db_task)
+    return db_task
+
+def update_crm_task(db: Session, task_id: str, task_data: schemas.CRMTaskUpdate):
+    db_task = db.query(models.CRMTask).filter(models.CRMTask.id == task_id).first()
+    if db_task:
+        update_dict = task_data.model_dump(exclude_unset=True)
+        for key, value in update_dict.items():
+            setattr(db_task, key, value)
+        db.commit()
+        db.refresh(db_task)
+    return db_task

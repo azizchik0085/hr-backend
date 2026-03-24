@@ -323,3 +323,56 @@ class MeetingOut(BaseModel):
     
     class Config:
         from_attributes = True
+
+# ================= CLIENT & CRM =================
+class ClientBase(BaseModel):
+    name: str
+    phone: str
+    companyName: Optional[str] = None
+    defaultAddress: Optional[str] = None
+    stage: str = "yangi"
+    source: Optional[str] = None
+
+class ClientCreate(ClientBase):
+    pass
+
+class ClientUpdate(BaseModel):
+    name: Optional[str] = None
+    phone: Optional[str] = None
+    companyName: Optional[str] = None
+    defaultAddress: Optional[str] = None
+    stage: Optional[str] = None
+    source: Optional[str] = None
+
+class ClientResponse(ClientBase):
+    id: str
+
+    class Config:
+        from_attributes = True
+
+class CRMTaskBase(BaseModel):
+    client_id: str
+    scheduled_time: datetime
+    expected_product: Optional[str] = None
+    notes: Optional[str] = None
+    status: str = "kutilmoqda"
+
+class CRMTaskCreate(CRMTaskBase):
+    employee_id: Optional[str] = None  # Agar frontdan kelmasa API-dan olinadi
+
+class CRMTaskUpdate(BaseModel):
+    scheduled_time: Optional[datetime] = None
+    expected_product: Optional[str] = None
+    notes: Optional[str] = None
+    status: Optional[str] = None
+
+class CRMTaskResponse(CRMTaskBase):
+    id: str
+    employee_id: str
+    created_at: datetime
+    
+    # Nested mijoz qisqacha ma'lumoti
+    client: Optional[ClientResponse] = None
+
+    class Config:
+        from_attributes = True

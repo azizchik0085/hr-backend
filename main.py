@@ -367,6 +367,42 @@ def create_new_meeting(meeting: schemas.MeetingCreate, db: Session = Depends(get
 def retrieve_my_meetings(db: Session = Depends(get_db), current_user: models.Employee = Depends(get_current_user)):
     return crud.get_my_meetings(db, current_user.id)
 
+# ================= CRM & SALES FUNNEL =================
+
+@app.get("/clients/", response_model=List[schemas.ClientResponse])
+def get_clients_list(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), current_user: models.Employee = Depends(get_current_user)):
+    return crud.get_clients(db, skip=skip, limit=limit)
+
+@app.post("/clients/", response_model=schemas.ClientResponse)
+def create_new_client(client: schemas.ClientCreate, db: Session = Depends(get_db), current_user: models.Employee = Depends(get_current_user)):
+    return crud.create_client(db, client)
+
+@app.put("/clients/{client_id}/stage", response_model=schemas.ClientResponse)
+def update_client_funnel_stage(client_id: str, stage: str = Form(...), db: Session = Depends(get_db), current_user: models.Employee = Depends(get_current_user)):
+    res = crud.update_client_stage(db, client_id, stage)
+    if not res:
+        raise HTTPException(status_code=404, detail="Mijoz topilmadi")
+    return res
+
+@app.get("/crm_tasks/", response_model=List[schemas.CRMTaskResponse])
+def get_all_crm_tasks(date_str: Optional[str] = None, employee_id: Optional[str] = None, db: Session = Depends(get_db), current_user: models.Employee = Depends(get_current_user)):
+    # Agar direktor bo'lmasa, faqat o'zini topshiriqlarini ko'radi
+    if current_user.roleTitle and current_user.roleTitle.lower() != "direktor":
+        employee_id = current_user.id
+    return crud.get_crm_tasks(db, employee_id=employee_id, date_str=date_str)
+
+@app.post("/crm_tasks/", response_model=schemas.CRMTaskResponse)
+def create_new_crm_task(task: schemas.CRMTaskCreate, db: Session = Depends(get_db), current_user: models.Employee = Depends(get_current_user)):
+    emp_id = task.employee_id if task.employee_id else current_user.id
+    return crud.create_crm_task(db, task, employee_id=emp_id)
+
+@app.put("/crm_tasks/{task_id}", response_model=schemas.CRMTaskResponse)
+def update_existing_crm_task(task_id: str, task_update: schemas.CRMTaskUpdate, db: Session = Depends(get_db), current_user: models.Employee = Depends(get_current_user)):
+    res = crud.update_crm_task(db, task_id, task_update)
+    if not res:
+        raise HTTPException(status_code=404, detail="Topshiriq topilmadi")
+    return res
+
 # ================= BACKGROUND TASKS =================
 async def check_shifts_bg_task():
     while True:

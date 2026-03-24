@@ -90,6 +90,23 @@ class Client(Base):
     phone = Column(String)
     companyName = Column(String, nullable=True)
     defaultAddress = Column(String, nullable=True)
+    stage = Column(String, default="yangi")
+    source = Column(String, nullable=True)
+
+class CRMTask(Base):
+    __tablename__ = "crm_tasks"
+
+    id = Column(String, primary_key=True, index=True)
+    employee_id = Column(String, ForeignKey("employees.id"))
+    client_id = Column(String, ForeignKey("clients.id"))
+    scheduled_time = Column(DateTime)
+    expected_product = Column(String, nullable=True)
+    notes = Column(String, nullable=True)
+    status = Column(String, default="kutilmoqda")
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    employee = relationship("Employee")
+    client = relationship("Client")
 
 class Order(Base):
     __tablename__ = "orders"
