@@ -272,7 +272,23 @@ def get_cash_shifts(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.CashShift).order_by(models.CashShift.date.desc()).offset(skip).limit(limit).all()
 
 # ================= CALL LOGS & OPERATOR STATS =================
+def _ensure_client_exists(db: Session, phone: str):
+    if not phone or len(phone.strip()) < 5: return
+    # Exact match tekshirish
+    existing = db.query(models.Client).filter(models.Client.phone == phone).first()
+    if not existing:
+        new_client = models.Client(
+            id=f"CLI-{uuid.uuid4().hex[:8].upper()}",
+            name="Yangi Mijoz (Qo'ng'iroq)",
+            phone=phone,
+            source="Qo'ng'iroq",
+            stage="yangi"
+        )
+        db.add(new_client)
+        db.commit()
+
 def create_call_log(db: Session, call_log: schemas.CallLogCreate):
+    _ensure_client_exists(db, call_log.client_phone)
     db_call = models.CallLog(
         id=f"CAL-{uuid.uuid4().hex[:8].upper()}",
         employee_id=call_log.employee_id,
@@ -288,6 +304,7 @@ def create_call_log(db: Session, call_log: schemas.CallLogCreate):
     return db_call
 
 def save_call_audio(db: Session, employee_id: str, client_phone: str, record_url: str):
+    _ensure_client_exists(db, client_phone)
     db_call = models.CallLog(
         id=f"CAL-{uuid.uuid4().hex[:8].upper()}",
         employee_id=employee_id,
