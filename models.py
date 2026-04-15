@@ -52,11 +52,22 @@ class Product(Base):
     minRequiredStock = Column(Integer, default=10)
     brand = Column(String, nullable=True)
 
+class SalesBranch(Base):
+    __tablename__ = "sales_branches"
+
+    id = Column(String, primary_key=True, index=True)
+    name = Column(String, unique=True, index=True)
+    address = Column(String, nullable=True)
+    isActive = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
 class SupplyRequest(Base):
     __tablename__ = "supply_requests"
 
     id = Column(String, primary_key=True, index=True)
     requesterId = Column(String)  # Sotuvchi ID
+    branchId = Column(String, nullable=True) # SAVDO TOCHKASI ID
+    branchName = Column(String, nullable=True) # SAVDO TOCHKASI NOMI
     requestDate = Column(DateTime, default=datetime.utcnow)
     
     # SLA vaqt nazorati

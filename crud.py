@@ -96,6 +96,27 @@ def create_product(db: Session, product: schemas.ProductCreate):
     db.refresh(db_product)
     return db_product
 
+from sqlalchemy.exc import IntegrityError
+from fastapi import HTTPException
+
+# ================= SALES BRANCH =================
+def get_branches(db: Session):
+    return db.query(models.SalesBranch).all()
+
+def create_branch(db: Session, branch: schemas.SalesBranchCreate):
+    db_branch = models.SalesBranch(
+        id=f"BR-{uuid.uuid4().hex[:8].upper()}",
+        **branch.model_dump()
+    )
+    try:
+        db.add(db_branch)
+        db.commit()
+        db.refresh(db_branch)
+        return db_branch
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Bunday nomdagi do'kon (filial) allaqachon mavjud!")
+
 # ================= SUPPLY REQUEST =================
 def get_supply_requests(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.SupplyRequest).order_by(models.SupplyRequest.requestDate.desc()).offset(skip).limit(limit).all()
@@ -104,6 +125,8 @@ def create_supply_request(db: Session, request: schemas.SupplyRequestCreate):
     db_request = models.SupplyRequest(
         id=f"REQ-{uuid.uuid4().hex[:8].upper()}",
         requesterId=request.requesterId,
+        branchId=request.branchId,
+        branchName=request.branchName,
         status="Kutilmoqda"
     )
     db.add(db_request)
@@ -137,6 +160,12 @@ def update_supply_request_status(db: Session, request_id: str, new_status: str, 
                 req.receiptImage = receipt_b64
             if product_b64:
                 req.productImage = product_b64
+        elif new_status == "Tayyor":
+            # Omborga yopish (Prixodchi)
+            for item in req.items:
+                product = db.query(models.Product).filter(models.Product.name == item.productName).first()
+                if product:
+                    product.currentStock += item.quantity
                 
         db.commit()
         db.refresh(req)

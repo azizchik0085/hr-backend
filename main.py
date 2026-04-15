@@ -169,6 +169,15 @@ async def verify_attendance_face(employee_id: str, file: UploadFile = File(...),
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+# ================= SALES BRANCHES =================
+@app.get("/branches/", response_model=List[schemas.SalesBranchResponse])
+def read_branches(db: Session = Depends(get_db)):
+    return crud.get_branches(db)
+
+@app.post("/branches/", response_model=schemas.SalesBranchResponse)
+def create_branch(branch: schemas.SalesBranchCreate, db: Session = Depends(get_db), current_user: models.Employee = Depends(get_current_user)):
+    return crud.create_branch(db=db, branch=branch)
+
 # ================= PRODUCTS & SUPPLY =================
 @app.get("/products/", response_model=List[schemas.ProductResponse])
 def read_products(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):

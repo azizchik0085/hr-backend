@@ -92,9 +92,27 @@ class SupplyRequestItemResponse(SupplyRequestItemBase):
     class Config:
         from_attributes = True
 
+# ================= SALES BRANCH =================
+class SalesBranchBase(BaseModel):
+    name: str
+    address: Optional[str] = None
+    isActive: bool = True
+
+class SalesBranchCreate(SalesBranchBase):
+    pass
+
+class SalesBranchResponse(SalesBranchBase):
+    id: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
 # ================= SUPPLY REQUEST =================
 class SupplyRequestBase(BaseModel):
     requesterId: str
+    branchId: Optional[str] = None
+    branchName: Optional[str] = None
     status: str = "Kutilmoqda"
     receiptImage: Optional[str] = None
     productImage: Optional[str] = None
